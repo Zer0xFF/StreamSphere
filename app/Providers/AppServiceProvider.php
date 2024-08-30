@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,13 +21,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if(User::count() == 0)
+        try
         {
-            User::create([
-                'name' => env('XTREAM_ADMIN_USER_NAME'),
-                'email' => env('XTREAM_ADMIN_USER_EMAIL'),
-                'password' => Hash::make(env('XTREAM_ADMIN_USER_PASSWORD')),
-            ]);
+            if(User::count() == 0)
+            {
+                User::create([
+                    'name' => env('XTREAM_ADMIN_USER_NAME'),
+                    'email' => env('XTREAM_ADMIN_USER_EMAIL'),
+                    'password' => Hash::make(env('XTREAM_ADMIN_USER_PASSWORD')),
+                ]);
+            }
+        }
+        catch (\Exception $e)
+        {
         }
     }
 }
