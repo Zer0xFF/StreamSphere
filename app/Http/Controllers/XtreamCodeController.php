@@ -81,6 +81,8 @@ class XtreamCodeController extends Controller
         $provider = $request->get('provider');
         $cacheKey = "{$provider->name}_xmltv";
 
+        ini_set('memory_limit', '512M');
+
         $body = Cache::remember($cacheKey, 1 * 60 * 60, function () use ($provider) {
             $response = Http::get("{$provider->portal_url}/xmltv.php", [
                 'username' => $provider->username,
