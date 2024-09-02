@@ -18,10 +18,33 @@ class CategoryActionManager extends Component
     public $is_hidden = true;
     public $editMode = false;
 
+    public $filter_provider_id = '';
+    public $filter_category_name = '';
+    public $filter_action = '';
+    public $filter_is_hidden = '';
+
     public function render()
     {
+        // Fetch all providers
         $this->providers = Provider::all();
-        $this->categoryActions = CategoryAction::withoutGlobalScope('hidden')->with('provider')->get();
+
+        // Build the query for CategoryAction with filters
+        $query = CategoryAction::withoutGlobalScope('hidden')->with('provider');
+
+        if ($this->filter_provider_id)
+            $query->where('provider_id', $this->filter_provider_id);
+
+        if ($this->filter_category_name)
+            $query->where('category_name', 'like', '%' . $this->filter_category_name . '%');
+
+        if ($this->filter_action)
+            $query->where('action', 'like', '%' . $this->filter_action . '%');
+
+        if ($this->filter_is_hidden !== '')
+            $query->where('is_hidden', $this->filter_is_hidden);
+
+        $this->categoryActions = $query->get();
+
         return view('livewire.category-action-manager');
     }
 
