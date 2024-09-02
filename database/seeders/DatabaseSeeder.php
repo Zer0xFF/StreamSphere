@@ -13,11 +13,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Check if the required environment variables are set
+        $adminUserName = env('XTREAM_ADMIN_USER_NAME');
+        $adminUserEmail = env('XTREAM_ADMIN_USER_EMAIL');
+        $adminUserPassword = env('XTREAM_ADMIN_USER_PASSWORD');
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        if (!$adminUserName || !$adminUserEmail || !$adminUserPassword) {
+            throw new \Exception('Required environment variables XTREAM_ADMIN_USER_NAME, XTREAM_ADMIN_USER_EMAIL, and XTREAM_ADMIN_USER_PASSWORD are missing.');
+        }
+
+        // Create the user with the environment variable values
+        User::create([
+            'name' => $adminUserName,
+            'email' => $adminUserEmail,
+            'password' => Hash::make($adminUserPassword),
         ]);
     }
 }

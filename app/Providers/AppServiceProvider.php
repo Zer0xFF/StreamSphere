@@ -21,19 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        try
-        {
-            if(User::count() == 0)
-            {
-                User::create([
-                    'name' => env('XTREAM_ADMIN_USER_NAME'),
-                    'email' => env('XTREAM_ADMIN_USER_EMAIL'),
-                    'password' => Hash::make(env('XTREAM_ADMIN_USER_PASSWORD')),
-                ]);
-            }
-        }
-        catch (\Exception $e)
-        {
-        }
+        //
     }
 }
