@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Device;
+use App\Models\DeviceUser;
 use App\Models\Provider;
 
 use Closure;
@@ -19,7 +19,7 @@ class ProviderMiddleware
 
      private function GetProvider($username)
      {
-         $device = Device::where('username', $username)->first();
+         $device = DeviceUser::where('username', $username)->first();
          if($device)
              return $device->provider;
         // some IPTV players get the username and password from player_api.php
