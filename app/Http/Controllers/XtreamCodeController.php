@@ -32,7 +32,6 @@ class XtreamCodeController extends Controller
 
         $action = $request->query('action', '');
         $username = $request->query('username', 'default');
-        $password = $request->query('password'. 'default');
 
         $provider = $request->get('provider');
 
