@@ -11,6 +11,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/providers', 'providers')->name('providers');
     Route::view('/devices', 'devices')->name('devices');
     Route::view('/filters', 'filters')->name('filters');
+    Route::view('/patterns', 'patterns')->name('patterns');
 });
 
 use App\Http\Controllers\StringTestController;

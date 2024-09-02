@@ -22,6 +22,10 @@
                 <label class="block text-gray-700 font-medium mb-2">Action</label>
                 <input type="text" wire:model="action" placeholder="Action" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
             </div>
+            <div>
+                <label class="block text-gray-700 font-medium mb-2">Is Hidden</label>
+                <input type="checkbox" wire:model="is_hidden" class="form-checkbox h-5 w-5 text-blue-600">
+            </div>
         </div>
         <div class="mt-6 text-right">
             <button type="submit" class="px-6 py-2 text-black bg-indigo-50 hover:bg-blue-700 rounded-lg">
@@ -37,7 +41,8 @@
                 <th class="px-4 py-2 text-center text-sm font-medium">Category ID</th>
                 <th class="px-4 py-2 text-center text-sm font-medium">Category Name</th>
                 <th class="px-4 py-2 text-center text-sm font-medium">Action</th>
-                <th class="px-4 py-2 text-center text-sm font-medium">Actions</th>
+                <th class="px-4 py-2 text-center text-sm font-medium">Action</th>
+                <th class="px-4 py-2 text-center text-sm font-medium">Is Hidden</th>
             </tr>
         </thead>
         <tbody>
@@ -47,6 +52,7 @@
                 <td class="px-4 py-2 text-center text-sm text-gray-700">{{ $categoryAction->category_id }}</td>
                 <td class="px-4 py-2 text-center text-sm text-gray-700">{{ $categoryAction->category_name }}</td>
                 <td class="px-4 py-2 text-center text-sm text-gray-700">{{ $categoryAction->action }}</td>
+                <td class="px-4 py-2 text-center text-sm text-gray-700">{{ $categoryAction->is_hidden ? 'Hidden' : 'Visible' }}</td>
                 <td class="px-4 py-2 text-center">
                     <button wire:click="editCategoryAction({{ $categoryAction->id }})" class="px-4 py-2 mr-2 text-sm text-black bg-indigo-50 rounded hover:bg-indigo-100">
                         Edit

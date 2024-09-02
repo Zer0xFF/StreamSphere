@@ -15,12 +15,13 @@ class CategoryActionManager extends Component
     public $category_name;
     public $action;
     public $category_action_id;
+    public $is_hidden = true;
     public $editMode = false;
 
     public function render()
     {
         $this->providers = Provider::all();
-        $this->categoryActions = CategoryAction::with('provider')->get();
+        $this->categoryActions = CategoryAction::withoutGlobalScope('hidden')->with('provider')->get();
         return view('livewire.category-action-manager');
     }
 
@@ -31,6 +32,7 @@ class CategoryActionManager extends Component
         $this->category_name = '';
         $this->action = '';
         $this->category_action_id = null;
+        $this->is_hidden = true;
         $this->editMode = false;
     }
 
@@ -41,6 +43,7 @@ class CategoryActionManager extends Component
             'category_id' => 'required|string|max:255',
             'category_name' => 'required|string|max:255',
             'action' => 'required|string|max:255',
+            'is_hidden' => 'boolean',
         ]);
 
         CategoryAction::create([
@@ -48,6 +51,7 @@ class CategoryActionManager extends Component
             'category_id' => $this->category_id,
             'category_name' => $this->category_name,
             'action' => $this->action,
+            'is_hidden' => $this->is_hidden,
         ]);
 
         session()->flash('message', 'Category Action added successfully.');
@@ -63,6 +67,7 @@ class CategoryActionManager extends Component
         $this->category_id = $categoryAction->category_id;
         $this->category_name = $categoryAction->category_name;
         $this->action = $categoryAction->action;
+        $this->is_hidden = $categoryAction->is_hidden;
         $this->editMode = true;
     }
 
@@ -73,6 +78,7 @@ class CategoryActionManager extends Component
             'category_id' => 'required|string|max:255',
             'category_name' => 'required|string|max:255',
             'action' => 'required|string|max:255',
+            'is_hidden' => 'boolean',
         ]);
 
         $categoryAction = CategoryAction::findOrFail($this->category_action_id);
@@ -81,6 +87,7 @@ class CategoryActionManager extends Component
             'category_id' => $this->category_id,
             'category_name' => $this->category_name,
             'action' => $this->action,
+            'is_hidden' => $this->is_hidden,
         ]);
 
         session()->flash('message', 'Category Action updated successfully.');

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Device;
 use App\Models\Provider;
 use App\Models\CategoryAction;
+use App\Models\CategoryFilter;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -104,9 +105,9 @@ class XtreamCodeController extends Controller
         return redirect()->away($targetUrl);
     }
 
-    public function refreshFilters(Request $request)
+    public function refreshCategories(Request $request)
     {
-        Log::info('Request to /refreshfilters', $request->all());
+        Log::info('Request to /refreshcats', $request->all());
         set_time_limit(300);
 
         $username = $request->query('username', 'default');
@@ -118,33 +119,6 @@ class XtreamCodeController extends Controller
         $queryParams['username'] = $provider->username;
         $queryParams['password'] = $provider->password;
 
-        function filterCategoriesPattern($categories, $pattern)
-        {
-            return array_filter($categories, function ($category) use ($pattern) {
-                $categoryName = $category['category_name'];
-
-                // Check for "18+" or "adult"
-                if(preg_match('/18\+|adult/i', $categoryName))
-                    return true;
-
-                // Check for the provided pattern
-                if(preg_match($pattern, $categoryName, $matches))
-                {
-                    $langCode = !empty($matches[1]) ? $matches[1] : $matches[2];
-                    // Allow only AR, EN, UK, US, AU language codes
-                    if(!in_array($langCode, ['AR', 'AU', 'EN', 'IE', 'UK', 'US']))
-                    {
-                        if($langCode === 'CA' && preg_match('/EN$/', $categoryName))
-                            return false;
-                        // Log::info('EXCLUDED:', $category);
-                        return true;
-                    }
-                }
-                // Log::info('INCLUDED:', $category);
-                return false;
-            });
-        }
-
         foreach(['get_vod_categories', 'get_series_categories', 'get_live_categories'] as $action)
         {
             $cacheKey = "{$provider->name}_{$action}_{$provider->username}_{$queryParamsString}";
@@ -155,71 +129,20 @@ class XtreamCodeController extends Controller
                 return $response->json();
             });
 
-            switch($action)
-            {
-                case 'get_series_categories':
-                {
-                    $isArabic = fn($string) => preg_match('/[\p{Arabic}]/u', $string);
-                    $isEnglish = fn($string) => preg_match('/[a-zA-Z]/', $string);
-
-                    function isNonEnglishOrArabic($string)
-                    {
-                        if(stripos($string, "(SUB EN)") !== false)
-                            return false;
-                        // A list of non-English and non-Arabic keywords/languages to exclude
-                        $excludedKeywords = [
-                            'ESPAÑA', 'QUÉBEC', 'TURKISH', 'TURKSIH', 'GREECE', 'GREEK', 'ITALY', 
-                            'FRANCE', 'ALBANIA', 'INDIA', 'PAKISTAN', 'NETHERLANDS', 'VIDEOLAND',
-                            'GERMANY', 'POLSKA', 'PT/BR', 'BULGARIYA', 'RUSSIA', 
-                            'PHILIPPINES', 'NORDIC', 'SVENSK', 'SVENSKA', 'DANSK', 'DANSKE', 
-                            'NORSK', 'SUOMI'
-                        ];
-                    
-                        foreach($excludedKeywords as $keyword)
-                        {
-                            if(stripos($string, $keyword) !== false)
-                                return true;
-                        }
-                        return false;
-                    }
-
-                    $isAllowedCategory = fn($categoryName) => ($isArabic($categoryName) || $isEnglish($categoryName)) && !isNonEnglishOrArabic($categoryName);
-
-                    $jsonReturn = array_filter($jsonReturn, function ($category) use($isAllowedCategory) {
-                        $categoryName = $category['category_name'];
-
-                        if(!$isAllowedCategory($categoryName))
-                        {
-                            return true;
-                        }
-                        return false;
-                    });
-                }
-                break;
-                case 'get_vod_categories':
-                    // Pattern for "LANG_CODE - CAT_NAME" or "PT/BR - CAT_NAME"
-                    $pattern = '/^([A-Z]{2})\ - |^(PT\/BR)\ - /';
-                    $jsonReturn = filterCategoriesPattern($jsonReturn, $pattern);
-                break;
-
-                case 'get_live_categories':
-                    // Pattern for "LANG_CODE| CAT_NAME"
-                    $pattern = '/^([A-Z]{2})\| /';
-                    $jsonReturn = filterCategoriesPattern($jsonReturn, $pattern);
-                break;
-                default:
-                    ;
-            }
-
             $action = str_replace(['get_', '_categories'], '', $action);
             foreach($jsonReturn as $category)
             {
-                CategoryAction::firstOrCreate([
-                    'provider_id' => $provider->id,
-                    'category_name' => $category['category_name'],
-                    'action' => $action,
-                    'category_id' => $category['category_id'],
-                ]);
+                $categoryAction = CategoryAction::withoutGlobalScope('hidden')->updateOrCreate(
+                    [
+                        'provider_id' => $provider->id,
+                        'category_id' => $category['category_id'],
+                        'action' => $action,
+                    ],
+                    [
+                        'category_name' => $category['category_name'],
+                    ]
+                );
+                $categoryAction->save();
             }
         }
 

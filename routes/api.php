@@ -9,6 +9,7 @@ Route::middleware([ProviderMiddleware::class])->group(function () {
     Route::get('/player_api.php', [XtreamCodeController::class, 'PlayerApi']);
     Route::get('/xmltv.php', [XtreamCodeController::class, 'getEPG']);
     Route::get('/live/{username}/{password}/{filename}', [XtreamCodeController::class, 'redirectToExternal']);
+    Route::get('/refreshCategories', [XtreamCodeController::class, 'refreshCategories']);
     Route::get('/refreshfilters', [XtreamCodeController::class, 'refreshFilters']);
 });
 
