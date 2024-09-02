@@ -28,6 +28,8 @@ class XtreamCodeController extends Controller
     {
         Log::info('Request to /player_api.php:', $request->all());
         set_time_limit(60);
+        ini_set('memory_limit', '512M');
+
         $action = $request->query('action', '');
         $username = $request->query('username', 'default');
         $password = $request->query('password'. 'default');
