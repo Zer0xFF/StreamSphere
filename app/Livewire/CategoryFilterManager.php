@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\CategoryAction;
 use App\Models\CategoryFilter;
 use App\Models\Provider;
+use Illuminate\Support\Facades\Log;
 
 class CategoryFilterManager extends Component
 {
@@ -106,7 +107,8 @@ class CategoryFilterManager extends Component
     {
         $filter = CategoryFilter::findOrFail($filterId);
 
-        $categories = CategoryAction::where('action', $filter->category_name)
+        $categories = CategoryAction::withoutGlobalScope('hidden')
+            ->where('action', $filter->action)
             ->where('provider_id', $filter->provider_id)
             ->get();
 
@@ -115,8 +117,12 @@ class CategoryFilterManager extends Component
             $categoryName = $category->category_name;
             $isHidden = preg_match($filter->exclusion_pattern, $categoryName) || !preg_match($filter->inclusion_pattern, $categoryName);
 
-            $category->is_hidden = $isHidden;
-            $category->save();
+            if($category->is_hidden != $isHidden)
+            {
+                $category->is_hidden = $isHidden;
+                $category->save();
+                Log::info('Updated:', $category->toArray());
+            }
         }
 
         session()->flash('message', 'Category Actions updated successfully based on filters.');
