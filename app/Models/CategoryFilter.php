@@ -9,7 +9,7 @@ class CategoryFilter extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['provider_id', 'category_name', 'inclusion_pattern', 'exclusion_pattern'];
+    protected $fillable = ['provider_id', 'action', 'inclusion_pattern', 'exclusion_pattern'];
 
     public function provider()
     {
