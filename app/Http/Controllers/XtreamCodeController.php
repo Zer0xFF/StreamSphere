@@ -97,10 +97,10 @@ class XtreamCodeController extends Controller
         return $body;
     }
 
-    public function redirectToExternal($username, $password, $filename)
+    public function redirectToExternal(Request $request, $category, $username, $password, $filename)
     {
         $provider = $request->get('provider');
-        $targetUrl = "{$provider->portal_url}/live/{$provider->username}/{$provider->password}/{$filename}";
+        $targetUrl = "{$provider->portal_url}/{$category}/{$provider->username}/{$provider->password}/{$filename}";
 
         return redirect()->away($targetUrl);
     }

@@ -28,7 +28,10 @@ class ProviderMiddleware
 
     public function handle(Request $request, Closure $next): Response
     {
-        $username = $request->query('username', 'default');
+        $username = $request->query('username');
+        if(!$username)
+            $username = $request->route('username');
+
         $provider = $this->GetProvider($username);
         if($provider)
         {
