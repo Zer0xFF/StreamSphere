@@ -32,6 +32,7 @@
                         <div class="flex gap-2">
                             <input x-model="searchQuery" @keydown.enter.prevent="search()" type="text" placeholder="Search channels, shows, movies" class="w-full border-gray-300 rounded-lg" />
                             <button @click="search()" class="px-4 py-2 rounded-lg bg-indigo-600 text-white">Go</button>
+                            <button @click="refreshCache()" :disabled="loading || !providerId" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 border border-gray-300 disabled:opacity-50">Refresh cache</button>
                         </div>
                     </div>
                 </div>
@@ -69,6 +70,7 @@
                 searchQuery: '',
                 items: [],
                 loading: false,
+                refreshing: false,
 
                 init() {},
                 tabClass(tab) {
@@ -82,6 +84,25 @@
                     if (this.searchQuery.trim() !== '') {
                         await this.search();
                     }
+                },
+
+                async refreshCache() {
+                    if (!this.providerId) return;
+
+                    this.refreshing = true;
+                    await fetch(`/xtream-browser/refresh-cache?provider_id=${this.providerId}&type=${this.activeTab}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content') ?? '',
+                        },
+                    });
+
+                    await this.reloadCategories();
+                    if (this.searchQuery.trim() !== '') {
+                        await this.search();
+                    }
+                    this.refreshing = false;
                 },
                 async reloadCategories() {
                     this.categories = [];

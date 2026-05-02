@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/xtream-browser', [XtreamBrowserController::class, 'index'])->name('xtream-browser');
     Route::get('/xtream-browser/categories', [XtreamBrowserController::class, 'categories'])->name('xtream-browser.categories');
     Route::get('/xtream-browser/search', [XtreamBrowserController::class, 'search'])->name('xtream-browser.search');
+    Route::post('/xtream-browser/refresh-cache', [XtreamBrowserController::class, 'refreshCache'])->name('xtream-browser.refresh-cache');
 });
 
 use App\Http\Controllers\StringTestController;
