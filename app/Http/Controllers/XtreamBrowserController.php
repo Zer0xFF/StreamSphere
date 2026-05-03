@@ -104,6 +104,14 @@ class XtreamBrowserController extends Controller
             return $response->body();
         });
 
+        if (is_array($responseBody)) {
+            return $responseBody;
+        }
+
+        if (! is_string($responseBody)) {
+            return [];
+        }
+
         $decoded = json_decode($responseBody, true);
 
         return is_array($decoded) ? $decoded : [];
