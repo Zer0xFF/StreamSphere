@@ -44,16 +44,24 @@ class XtreamCodeController extends Controller
         $queryParams['password'] = $provider->password;
         $queryParams['action'] = $action;
 
-        $jsonReturn = Cache::remember($cacheKey, 1 * 60 * 60, function () use ($provider, $queryParams) {
+        $responseBody = Cache::remember($cacheKey, 1 * 60 * 60, function () use ($provider, $queryParams) {
             $response = Http::get("{$provider->portal_url}/player_api.php", $queryParams);
-            return $response->json();
+            return $response->body();
         });
 
-        // TODO
-        // if($noFilter)
-        //     return response()->json($jsonReturn);
+        $shouldFilterCategories = !empty($action) && !preg_match('/_info$/', $action);
 
-        if(!empty($action) && !preg_match('/_info$/', $action))
+        if (!$shouldFilterCategories) {
+            return response($responseBody, 200)->header('Content-Type', 'application/json');
+        }
+
+        $jsonReturn = json_decode($responseBody, true);
+
+        if (!is_array($jsonReturn)) {
+            return response($responseBody, 200)->header('Content-Type', 'application/json');
+        }
+
+        if($shouldFilterCategories)
         {
             $categoriesAction = CategoryAction::where('action', str_replace(['get_', '_streams', '_categories'], '', $action))
                 ->where('provider_id', $provider->id)

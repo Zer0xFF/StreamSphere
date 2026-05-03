@@ -93,7 +93,7 @@ class XtreamBrowserController extends Controller
     {
         $cacheKey = $this->cacheKey($provider, $action, $params);
 
-        return Cache::remember($cacheKey, now()->addHour(), function () use ($provider, $action, $params) {
+        $responseBody = Cache::remember($cacheKey, now()->addHour(), function () use ($provider, $action, $params) {
             $response = Http::get("{$provider->portal_url}/player_api.php", [
                 'username' => $provider->username,
                 'password' => $provider->password,
@@ -101,8 +101,12 @@ class XtreamBrowserController extends Controller
                 ...$params,
             ]);
 
-            return $response->json() ?: [];
+            return $response->body();
         });
+
+        $decoded = json_decode($responseBody, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 
     private function buildSearchIndex(Provider $provider, string $type): array
