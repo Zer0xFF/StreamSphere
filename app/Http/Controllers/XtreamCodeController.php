@@ -55,10 +55,18 @@ class XtreamCodeController extends Controller
             return response($responseBody, 200)->header('Content-Type', 'application/json');
         }
 
-        $jsonReturn = json_decode($responseBody, true);
+        if (is_array($responseBody)) {
+            $jsonReturn = $responseBody;
+        } else {
+            if (!is_string($responseBody)) {
+                return response()->json([]);
+            }
 
-        if (!is_array($jsonReturn)) {
-            return response($responseBody, 200)->header('Content-Type', 'application/json');
+            $jsonReturn = json_decode($responseBody, true);
+
+            if (!is_array($jsonReturn)) {
+                return response($responseBody, 200)->header('Content-Type', 'application/json');
+            }
         }
 
         if($shouldFilterCategories)
@@ -136,6 +144,10 @@ class XtreamCodeController extends Controller
                 $response = Http::get("{$provider->portal_url}/player_api.php", $queryParams);
                 return $response->json();
             });
+
+            if (!is_array($jsonReturn)) {
+                continue;
+            }
 
             $action = str_replace(['get_', '_categories'], '', $action);
             foreach($jsonReturn as $category)
