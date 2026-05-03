@@ -44,16 +44,38 @@ class XtreamCodeController extends Controller
         $queryParams['password'] = $provider->password;
         $queryParams['action'] = $action;
 
-        $jsonReturn = Cache::remember($cacheKey, 1 * 60 * 60, function () use ($provider, $queryParams) {
+        $responseBody = Cache::remember($cacheKey, 1 * 60 * 60, function () use ($provider, $queryParams) {
             $response = Http::get("{$provider->portal_url}/player_api.php", $queryParams);
-            return $response->json();
+            return $response->body();
         });
 
-        // TODO
-        // if($noFilter)
-        //     return response()->json($jsonReturn);
+        $shouldFilterCategories = !empty($action) && !preg_match('/_info$/', $action);
 
-        if(!empty($action) && !preg_match('/_info$/', $action))
+        if (!$shouldFilterCategories) {
+            if (is_string($responseBody)) {
+                return response($responseBody, 200)->header('Content-Type', 'application/json');
+            }
+
+            return response()->json($responseBody);
+        }
+
+        if (is_array($responseBody)) {
+            $jsonReturn = $responseBody;
+        } elseif (is_string($responseBody)) {
+            $jsonReturn = json_decode($responseBody, true);
+        } else {
+            $jsonReturn = null;
+        }
+
+        if (!is_array($jsonReturn)) {
+            if (is_string($responseBody)) {
+                return response($responseBody, 200)->header('Content-Type', 'application/json');
+            }
+
+            return response()->json($responseBody);
+        }
+
+        if($shouldFilterCategories)
         {
             $categoriesAction = CategoryAction::where('action', str_replace(['get_', '_streams', '_categories'], '', $action))
                 ->where('provider_id', $provider->id)
