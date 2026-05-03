@@ -141,7 +141,7 @@ class XtreamBrowserController extends Controller
     {
         ksort($params);
 
-        return sprintf('xtream_browser:%d:%s:%s', $provider->id, $action, md5(json_encode($params)));
+        return sprintf('xtream_browser:v2:%d:%s:%s', $provider->id, $action, md5(json_encode($params)));
     }
 
     private function searchIndexCacheKey(Provider $provider, string $type): string

@@ -38,7 +38,7 @@ class XtreamCodeController extends Controller
 
         $queryParams = $request->except(['username', 'password', 'action']);
         $queryParamsString = http_build_query($queryParams);
-        $cacheKey = "{$provider->name}_{$action}_{$provider->username}_{$queryParamsString}";
+        $cacheKey = "v2_{$provider->name}_{$action}_{$provider->username}_{$queryParamsString}";
 
         $queryParams['username'] = $provider->username;
         $queryParams['password'] = $provider->password;
@@ -103,7 +103,7 @@ class XtreamCodeController extends Controller
     public function getEPG(Request $request)
     {
         $provider = $request->get('provider');
-        $cacheKey = "{$provider->name}_xmltv";
+        $cacheKey = "v2_{$provider->name}_xmltv";
 
         ini_set('memory_limit', '512M');
 
@@ -143,7 +143,7 @@ class XtreamCodeController extends Controller
 
         foreach(['get_vod_categories', 'get_series_categories', 'get_live_categories'] as $action)
         {
-            $cacheKey = "{$provider->name}_{$action}_{$provider->username}_{$queryParamsString}";
+            $cacheKey = "v2_{$provider->name}_{$action}_{$provider->username}_{$queryParamsString}";
             $queryParams['action'] = $action;
 
             $jsonReturn = Cache::remember($cacheKey, 1 * 60 * 60, function () use ($provider, $queryParams) {
