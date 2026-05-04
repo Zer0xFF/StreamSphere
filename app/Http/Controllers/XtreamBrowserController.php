@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 
 class XtreamBrowserController extends Controller
 {
@@ -19,6 +20,8 @@ class XtreamBrowserController extends Controller
 
     public function categories(Request $request): JsonResponse
     {
+        $this->increaseMemoryLimit();
+
         $provider = $this->resolveProvider($request);
         $type = $request->query('type', 'live');
 
@@ -35,6 +38,8 @@ class XtreamBrowserController extends Controller
 
     public function search(Request $request): JsonResponse
     {
+        $this->increaseMemoryLimit();
+
         $provider = $this->resolveProvider($request);
         $query = trim((string) $request->query('q', ''));
         $type = $request->query('type', 'live');
@@ -63,6 +68,8 @@ class XtreamBrowserController extends Controller
 
     public function refreshCache(Request $request): JsonResponse
     {
+        $this->increaseMemoryLimit();
+
         $provider = $this->resolveProvider($request);
         $type = $request->query('type', 'live');
 
@@ -73,10 +80,10 @@ class XtreamBrowserController extends Controller
         };
 
         foreach ($actions as $action) {
-            Cache::forget($this->cacheKey($provider, $action, []));
+            $this->cacheRepository()->forget($this->cacheKey($provider, $action, []));
         }
 
-        Cache::forget($this->searchIndexCacheKey($provider, $type));
+        $this->cacheRepository()->forget($this->searchIndexCacheKey($provider, $type));
 
         $this->requestPlayerApiCached($provider, $actions[0]);
         $this->buildSearchIndex($provider, $type);
@@ -92,8 +99,11 @@ class XtreamBrowserController extends Controller
     private function requestPlayerApiCached(Provider $provider, string $action, array $params = []): array
     {
         $cacheKey = $this->cacheKey($provider, $action, $params);
+        $cache = $this->cacheRepository();
 
-        $responseBody = Cache::remember($cacheKey, now()->addHour(), function () use ($provider, $action, $params) {
+        $responseBody = $cache->get($cacheKey);
+
+        if (! is_string($responseBody)) {
             $response = Http::get("{$provider->portal_url}/player_api.php", [
                 'username' => $provider->username,
                 'password' => $provider->password,
@@ -101,8 +111,12 @@ class XtreamBrowserController extends Controller
                 ...$params,
             ]);
 
-            return $response->body();
-        });
+            $responseBody = $response->body();
+
+            if ($this->shouldCachePayload($responseBody)) {
+                $cache->put($cacheKey, $responseBody, now()->addHour());
+            }
+        }
 
         if (is_array($responseBody)) {
             return $responseBody;
@@ -119,7 +133,7 @@ class XtreamBrowserController extends Controller
 
     private function buildSearchIndex(Provider $provider, string $type): array
     {
-        return Cache::remember($this->searchIndexCacheKey($provider, $type), now()->addHour(), function () use ($provider, $type) {
+        return $this->cacheRepository()->remember($this->searchIndexCacheKey($provider, $type), now()->addHour(), function () use ($provider, $type) {
             $action = match ($type) {
                 'movie' => 'get_vod_streams',
                 'series' => 'get_series',
@@ -144,8 +158,27 @@ class XtreamBrowserController extends Controller
         return sprintf('xtream_browser:%d:%s:%s', $provider->id, $action, md5(json_encode($params)));
     }
 
+
+    private function cacheRepository(): CacheRepository
+    {
+        if (config('cache.default') === 'database') {
+            return Cache::store('file');
+        }
+
+        return Cache::store(config('cache.default'));
+    }
     private function searchIndexCacheKey(Provider $provider, string $type): string
     {
         return "xtream_browser:{$provider->id}:search_index:{$type}";
+    }
+
+    private function shouldCachePayload(string $payload): bool
+    {
+        return strlen($payload) <= (int) env('XTREAM_BROWSER_CACHE_MAX_BYTES', 4 * 1024 * 1024);
+    }
+
+    private function increaseMemoryLimit(): void
+    {
+        ini_set('memory_limit', (string) env('XTREAM_BROWSER_MEMORY_LIMIT', '512M'));
     }
 }
