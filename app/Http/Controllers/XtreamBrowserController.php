@@ -55,12 +55,25 @@ class XtreamBrowserController extends Controller
         $filtered = collect($items)
             ->when($categoryId, fn ($collection) => $collection->where('category_id', (string) $categoryId))
             ->filter(fn (array $item) => str_contains($item['name_normalized'], $normalizedQuery))
-            ->values()
-            ->map(fn (array $item) => [
-                'name' => $item['name'],
-                'category_id' => $item['category_id'],
-                'stream_id' => $item['stream_id'],
+            ->values();
+
+        $categoryAction = match ($type) {
+            'movie' => 'get_vod_categories',
+            'series' => 'get_series_categories',
+            default => 'get_live_categories',
+        };
+
+        $categoryMap = collect($this->requestPlayerApiCached($provider, $categoryAction))
+            ->mapWithKeys(fn (array $category) => [
+                (string) ($category['category_id'] ?? '') => (string) ($category['category_name'] ?? ''),
             ]);
+
+        $filtered = $filtered->map(fn (array $item) => [
+            'name' => $item['name'],
+            'category_id' => $item['category_id'],
+            'category_name' => $categoryMap->get((string) $item['category_id'], 'Unknown category'),
+            'stream_id' => $item['stream_id'],
+        ]);
 
         return response()->json(['data' => $filtered]);
     }
