@@ -13,7 +13,7 @@ class XtreamBrowserController extends Controller
 {
     public function index()
     {
-        $providers = Provider::query()->orderBy('name')->get(['id', 'name']);
+        $providers = Provider::query()->orderBy('name')->get(['id', 'name', 'portal_url', 'username', 'password']);
 
         return view('xtream-browser', compact('providers'));
     }
