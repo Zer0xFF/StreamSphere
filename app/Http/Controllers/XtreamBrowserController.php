@@ -73,6 +73,7 @@ class XtreamBrowserController extends Controller
             'category_id' => $item['category_id'],
             'category_name' => $categoryMap->get((string) $item['category_id'], 'Unknown category'),
             'stream_id' => $item['stream_id'],
+            'container_extension' => $item['container_extension'] ?? '',
         ]);
 
         return response()->json(['data' => $filtered]);
@@ -160,6 +161,7 @@ class XtreamBrowserController extends Controller
                 'name_normalized' => mb_strtolower((string) ($item['name'] ?? '')),
                 'category_id' => (string) ($item['category_id'] ?? ''),
                 'stream_id' => $item['stream_id'] ?? ($item['series_id'] ?? null),
+                'container_extension' => (string) ($item['container_extension'] ?? ''),
             ])->all();
         });
     }

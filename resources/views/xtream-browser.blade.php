@@ -162,12 +162,16 @@
                         return '';
                     }
 
+                    const extension = (item?.container_extension || '').trim();
+
                     if (this.activeTab === 'live') {
-                        return `${config.portal_url}/live/${config.username}/${config.password}/${item.stream_id}.m3u8`;
+                        const liveExtension = extension !== '' ? extension : 'm3u8';
+                        return `${config.portal_url}/live/${config.username}/${config.password}/${item.stream_id}.${liveExtension}`;
                     }
 
                     if (this.activeTab === 'movie') {
-                        return `${config.portal_url}/movie/${config.username}/${config.password}/${item.stream_id}.mp4`;
+                        const movieExtension = extension !== '' ? extension : 'mp4';
+                        return `${config.portal_url}/movie/${config.username}/${config.password}/${item.stream_id}.${movieExtension}`;
                     }
 
                     return '';
