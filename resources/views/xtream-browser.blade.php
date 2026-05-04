@@ -80,7 +80,18 @@
                     </template>
                 </div>
             </div>
+        </div>
     </div>
+
+@php
+    $providerConfigs = $providers->keyBy('id')->map(function ($provider) {
+        return [
+            'portal_url' => rtrim($provider->portal_url, '/'),
+            'username' => $provider->username,
+            'password' => $provider->password,
+        ];
+    });
+@endphp
 
     <script>
         function xtreamBrowser() {
@@ -96,11 +107,7 @@
                 lightboxOpen: false,
                 currentItem: null,
                 currentStreamUrl: '',
-                providerConfigs: @json($providers->keyBy('id')->map(fn($provider) => [
-                    'portal_url' => rtrim($provider->portal_url, '/'),
-                    'username' => $provider->username,
-                    'password' => $provider->password,
-                ])),
+                providerConfigs: @json($providerConfigs),
 
                 init() {},
                 tabClass(tab) {
